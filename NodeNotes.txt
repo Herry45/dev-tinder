@@ -1,0 +1,79 @@
+SEASON 1:
+EP 4: module.export & require 
+
+-> Modules are protected by default. They protect their variables and functions from leaking unless explicitly exported.
+-> All the code of child module which is imported in the parent module gets wrapped inside a "IIFE" function.
+-> IIFE: Immediately invoked function expression
+   - These functions are invoked as soon as they are created or defined.
+   - So these immediately invokes the code inside the function as soon as it gets created or defined.
+   - Keeps code(variables) private and independent.
+-> Two ways to import and export the moduels(module patterns):
+-> CJS(Common js moduels) and MJS(ES6 modules)
+-> CJS(default in node):
+   - "module.exports(it is an empty object)" to export all the variables and functions using object together at the end of file. 
+   - "require" to import those into other files and Modules to use.
+   - executes code synchronously, means unless the import of child file is not done, parent moudle wont be executed.
+   - non-strict mode.
+-> MJS(ES6 moduels(ESM))
+   - export named functions 
+   - "import" to use in other files and modules
+   - new way to use, will become standard way in future.
+   - to use mjs, change value of "type" to "module instead of "commonjs" in package.json.
+   - executes code asynchronously.
+   - strict mode.( can't define variables without var, let and const)
+-> How "require" works BTS:
+  - Resolving the modules
+  - Loading the modules
+  - Wraps inside IIFE
+  - Evaluation: "module.exports" happens here.
+  - caching: When a module is imported using "require", all the above steps are cached.
+             Later when again imported elsewhere, it uses cached process and doesn't perform the above steps again.
+
+EP 6: libuv & async IO
+
+-> libuv is a multi-platform "C" library primarily designed for use in node that supports for asynchronous I/O based on event loops.
+-> Javascript is high level language. It works synchronously.
+-> To perform async tasks which includes communicating with OS, it uses Libuv(C language) which also makes it efficient to connect with OS.
+-> async IO: 
+   All code of nodejs will run inside a call stack.
+   Whenever any javascript code runs, a Global execution Context is created first to execute the code.
+-> synchronous functions block the main thread. Never use it.
+   - Any code after it will only be executed once sync function's execution is completed.
+-> Libuv will only push callback function in v8 engine once the call-stack is empty(after global execution context is finished).
+   - This means, as soon as javascript encounters any async operation, it offloads it to libuv and continues with the rest of the synchronous 
+     operations in the global execution context. Now the call back(of async) from the libuv will only be pushed in the call stack when it is empty i.e.,
+     after all the synchronous operations are done.
+   - And for that period, this callback functions will wait in callback queue of Libuv.
+   - eg: setTimeOut()
+
+EP 9: libuv & Event Loop
+
+-> Event Loop: The process of continues monitoring of callstack in V8 engine and callback queue in libuv, as well as pushing the callback in correct order from queue to the callstack 
+     to complete async tasks is managed by "Event Loop".
+-> working of event loops:
+   - 4 main phases: Timer -> poll -> check -> close (-> Repeat).
+   - Priority cycle/phase: This Priority cycle get executed before each of these above phases.
+   - So before each of the main phase, It will check for "process.nextTick()" and "promise callbacks" for the execution.
+   - Mental Mode Eg:  [process.nextTick() -> promise callbacks] --> Timer --> [process.nextTick() -> promise callbacks] --> poll and so on....
+   - When idle or waiting for any async task to complete, event loop waits at poll phase.
+-> one cycle or execution of event loop is called "Tick".
+-> So overall execution in node js: 
+   Current Call Stack (synchronous execution by v8 engine)
+        ↓
+   process.nextTick queue (Highest priority:If nested nextTick's exists, then it will be executed above everything until all nested nextTick's are executed.)
+        ↓
+   Promise microtask queue
+        ↓
+   Event Loop phases    
+
+
+EP 10: libuv & Thread Pool
+
+-> Libuv uses Thread pool to execute some of the async tasks.
+-> Certain asynchronous operations are offloaded to this thread pool, such as:
+   - File System APIs (fs.readFile, fs.writeFile, etc.)
+   - DNS lookups (dns.lookup)
+   - Some crypto operations (crypto.pbkdf2, crypto.scrypt, etc.)
+   - Compression (zlib)
+-> Default libuv thread pool size is 4. So thread-pool-based tasks are limited by the thread pool size.
+
